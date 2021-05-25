@@ -8,10 +8,10 @@ import java.util.Arrays;
 public enum HIType {
     //A Superset of all HITypes,
     // the applicable HITypes will be a subset coming from corresponding valuesets.json
-    CONDITION("Condition"),
-    OBSERVATION("Observation"),
+    //CONDITION("Condition"),
+    //OBSERVATION("Observation"),
     DIAGNOSTIC_REPORT("DiagnosticReport"),
-    MEDICATION_REQUEST("MedicationRequest"),
+    //MEDICATION_REQUEST("MedicationRequest"),
     DOCUMENT_REFERENCE("DocumentReference"),
     PRESCRIPTION("Prescription"),
     IMMUNIZATION_RECORD("ImmunizationRecord"),
