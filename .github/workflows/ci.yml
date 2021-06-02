@@ -39,3 +39,13 @@ jobs:
           CONTAINER_REPO_NAME: health-information-user
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: docker push $DOCKER_USERNAME/$CONTAINER_REPO_NAME:$RELEASE_VERSION
+      - name: Tag Docker Container with latest tag
+        env:
+          CONTAINER_REPO_NAME: health-information-user
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        run: docker tag $DOCKER_USERNAME/$CONTAINER_REPO_NAME:$RELEASE_VERSION $DOCKER_USERNAME/$CONTAINER_REPO_NAME:latest
+      - name: Push Latest Docker Container to Registry
+        env:
+          CONTAINER_REPO_NAME: health-information-user
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        run: docker push $DOCKER_USERNAME/$CONTAINER_REPO_NAME:latest
