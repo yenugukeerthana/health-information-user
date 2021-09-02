@@ -1,6 +1,7 @@
 package in.org.projecteka.hiu.consent;
 
 import in.org.projecteka.hiu.clients.GatewayServiceClient;
+import in.org.projecteka.hiu.common.GatewayResponse;
 import in.org.projecteka.hiu.consent.model.ConsentArtefact;
 import in.org.projecteka.hiu.consent.model.ConsentArtefactReference;
 import in.org.projecteka.hiu.consent.model.ConsentNotification;
@@ -46,15 +47,16 @@ public class RevokedConsentTask extends ConsentTask {
         }
         return validateConsents(consentNotification.getConsentArtefacts())
                 .flatMap(consentArtefacts -> {
+                    System.out.println("consentArtefacts " + consentArtefacts);
                     var cmSuffix = getCmSuffixFromArtefact(consentArtefacts);
-                    return gatewayServiceClient.sendConsentOnNotify(cmSuffix, buildConsentOnNotifyRequest(consentArtefacts));
+                    return gatewayServiceClient.sendConsentOnNotify(cmSuffix, buildConsentOnNotifyRequest(consentArtefacts,consentNotification.getConsentRequestId()));
                 })
                 .then(Mono.defer(() -> Flux.fromIterable(consentNotification.getConsentArtefacts())
                         .flatMap(reference -> processArtefactReference(reference, timeStamp))
                         .then()));
     }
 
-    private ConsentOnNotifyRequest buildConsentOnNotifyRequest(List<ConsentArtefact> consentArtefacts) {
+    private ConsentOnNotifyRequest buildConsentOnNotifyRequest(List<ConsentArtefact> consentArtefacts,String responseRequestId) {
         var requestId = UUID.randomUUID();
         var consentArtefactRequest = ConsentOnNotifyRequest
                 .builder()
@@ -65,6 +67,8 @@ public class RevokedConsentTask extends ConsentTask {
         for (ConsentArtefact consentArtefact : consentArtefacts) {
             acknowledgements.add(ConsentAcknowledgement.builder().consentId(consentArtefact.getConsentId()).status(OK).build());
         }
+        GatewayResponse gatewayResponse = new GatewayResponse(responseRequestId);
+        consentArtefactRequest.resp(gatewayResponse).build();
         return consentArtefactRequest.acknowledgement(acknowledgements).build();
     }
 
