@@ -53,6 +53,18 @@
           "system": "http://projecteka.in/ValueSet/health-info-type",
           "concept": [
             {
+              "code": "Condition",
+              "display": "Complaints/Encounter Diagnosis"
+            },
+            {
+              "code": "Observation",
+              "display": "Clinical Notes/Examination"
+            },
+            {
+              "code": "MedicationRequest",
+              "display": "Prescribed Medications"
+            },
+            {
               "code": "DiagnosticReport",
               "display": "Diagnostic Reports"
             },
