@@ -17,4 +17,28 @@ public class HiuConsentNotificationRequest {
     @NotNull
     private LocalDateTime timestamp;
     private ConsentNotification notification;
+
+    public UUID getRequestId() {
+        return requestId;
+    }
+
+    public void setRequestId(UUID requestId) {
+        this.requestId = requestId;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public ConsentNotification getNotification() {
+        return notification;
+    }
+
+    public void setNotification(ConsentNotification notification) {
+        this.notification = notification;
+    }
 }

@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static in.org.projecteka.hiu.consent.model.ConsentStatus.REQUESTED;
 
@@ -14,7 +15,7 @@ import static in.org.projecteka.hiu.consent.model.ConsentStatus.REQUESTED;
 public abstract class ConsentTask {
     protected final ConsentRepository consentRepository;
 
-    abstract Mono<Void> perform(ConsentNotification consentNotification, LocalDateTime timeStamp);
+    abstract Mono<Void> perform(ConsentNotification consentNotification, LocalDateTime timeStamp, UUID requestID);
 
     public Mono<Void> processNotificationRequest(String consentRequestId,
                                                  ConsentStatus status) {

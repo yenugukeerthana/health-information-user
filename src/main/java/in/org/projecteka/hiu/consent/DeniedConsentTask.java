@@ -4,6 +4,7 @@ import in.org.projecteka.hiu.consent.model.ConsentNotification;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static in.org.projecteka.hiu.consent.model.ConsentStatus.DENIED;
 
@@ -14,7 +15,7 @@ public class DeniedConsentTask extends ConsentTask {
     }
 
     @Override
-    public Mono<Void> perform(ConsentNotification consentNotification, LocalDateTime timeStamp) {
+    public Mono<Void> perform(ConsentNotification consentNotification, LocalDateTime timeStamp, UUID requestId) {
         return super.processNotificationRequest(consentNotification.getConsentRequestId(), DENIED);
     }
 }

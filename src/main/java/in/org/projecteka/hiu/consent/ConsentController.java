@@ -9,6 +9,7 @@ import in.org.projecteka.hiu.consent.model.ConsentStatusRequest;
 import in.org.projecteka.hiu.consent.model.GatewayConsentArtefactResponse;
 import in.org.projecteka.hiu.consent.model.HiuConsentNotificationRequest;
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +33,7 @@ import static in.org.projecteka.hiu.common.Constants.CORRELATION_ID;
 @AllArgsConstructor
 public class ConsentController {
     private final ConsentService consentService;
+    private final Logger logger;
 
     @PostMapping(APP_PATH_HIU_CONSENT_REQUESTS)
     public Mono<ResponseEntity<HttpStatus>> postConsentRequest(@RequestBody ConsentRequestData consentRequestData) {
@@ -60,6 +62,7 @@ public class ConsentController {
     @PostMapping(Constants.PATH_CONSENTS_HIU_NOTIFY)
     public Mono<ResponseEntity<HttpStatus>> hiuConsentNotification(
             @RequestBody @Valid HiuConsentNotificationRequest hiuNotification) {
+        logger.debug("Inside HIU/NOTIFY");
         consentService.handleNotification(hiuNotification)
                 .subscriberContext(ctx -> {
                     Optional<String> correlationId = Optional.ofNullable(MDC.get(CORRELATION_ID));

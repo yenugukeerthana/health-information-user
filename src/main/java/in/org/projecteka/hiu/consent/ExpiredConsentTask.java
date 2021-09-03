@@ -1,6 +1,7 @@
 package in.org.projecteka.hiu.consent;
 
 import in.org.projecteka.hiu.clients.GatewayServiceClient;
+import in.org.projecteka.hiu.common.GatewayResponse;
 import in.org.projecteka.hiu.consent.model.ConsentArtefact;
 import in.org.projecteka.hiu.consent.model.ConsentArtefactReference;
 import in.org.projecteka.hiu.consent.model.ConsentNotification;
@@ -39,14 +40,14 @@ public class ExpiredConsentTask extends ConsentTask {
 
 
     @Override
-    public Mono<Void> perform(ConsentNotification consentNotification, LocalDateTime timeStamp) {
+    public Mono<Void> perform(ConsentNotification consentNotification, LocalDateTime timeStamp, UUID requestID) {
         if (consentNotification.getConsentArtefacts().isEmpty()) {
             return processNotificationRequest(consentNotification.getConsentRequestId(), EXPIRED);
         }
         return validateConsents(consentNotification.getConsentArtefacts())
                 .flatMap(consentArtefacts -> {
                     var cmSuffix = getCmSuffixFromArtefact(consentArtefacts);
-                    return gatewayServiceClient.sendConsentOnNotify(cmSuffix, buildConsentOnNotifyRequest(consentArtefacts));
+                    return gatewayServiceClient.sendConsentOnNotify(cmSuffix, buildConsentOnNotifyRequest(consentArtefacts, requestID));
                 })
                 .then(Mono.defer(() -> Flux.fromIterable(consentNotification.getConsentArtefacts())
                         .flatMap(reference -> processArtefactReference(reference,
@@ -54,7 +55,7 @@ public class ExpiredConsentTask extends ConsentTask {
                         .then()));
     }
 
-    private ConsentOnNotifyRequest buildConsentOnNotifyRequest(List<ConsentArtefact> consentArtefacts) {
+    private ConsentOnNotifyRequest buildConsentOnNotifyRequest(List<ConsentArtefact> consentArtefacts, UUID requestID) {
         var requestId = UUID.randomUUID();
         var consentArtefactRequest = ConsentOnNotifyRequest
                 .builder()
@@ -65,6 +66,9 @@ public class ExpiredConsentTask extends ConsentTask {
         for (ConsentArtefact consentArtefact : consentArtefacts) {
             acknowledgements.add(ConsentAcknowledgement.builder().consentId(consentArtefact.getConsentId()).status(OK).build());
         }
+
+        GatewayResponse gatewayResponse = new GatewayResponse(requestID.toString());
+        consentArtefactRequest.resp(gatewayResponse).build();
         return consentArtefactRequest.acknowledgement(acknowledgements).build();
     }
 

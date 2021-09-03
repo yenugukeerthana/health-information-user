@@ -48,7 +48,7 @@ public class GrantedConsentTask extends ConsentTask {
     }
 
     @Override
-    public Mono<Void> perform(ConsentNotification consentNotification, LocalDateTime timeStamp) {
+    public Mono<Void> perform(ConsentNotification consentNotification, LocalDateTime timeStamp, UUID requestID) {
         var consentRequestId = consentNotification.getConsentRequestId();
         return consentRepository.get(consentRequestId)
                 .switchIfEmpty(defer(() -> {

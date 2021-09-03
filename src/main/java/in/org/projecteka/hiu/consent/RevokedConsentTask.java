@@ -8,6 +8,7 @@ import in.org.projecteka.hiu.consent.model.ConsentNotification;
 import in.org.projecteka.hiu.consent.model.ConsentStatus;
 import in.org.projecteka.hiu.consent.model.consentmanager.ConsentAcknowledgement;
 import in.org.projecteka.hiu.consent.model.consentmanager.ConsentOnNotifyRequest;
+import org.slf4j.Logger;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -27,6 +28,7 @@ public class RevokedConsentTask extends ConsentTask {
     private static final String CONSENT_REVOKE_MESSAGE = "Consent is revoked";
     private final HealthInformationPublisher healthInformationPublisher;
     private final GatewayServiceClient gatewayServiceClient;
+    private Logger logger;
 
     public RevokedConsentTask(ConsentRepository consentRepository, HealthInformationPublisher healthInformationPublisher, GatewayServiceClient gatewayServiceClient) {
         super(consentRepository);
@@ -41,7 +43,7 @@ public class RevokedConsentTask extends ConsentTask {
     }
 
     @Override
-    public Mono<Void> perform(ConsentNotification consentNotification, LocalDateTime timeStamp) {
+    public Mono<Void> perform(ConsentNotification consentNotification, LocalDateTime timeStamp, UUID requestID) {
         if (consentNotification.getConsentArtefacts().isEmpty()) {
             return processNotificationRequest(consentNotification.getConsentRequestId(), EXPIRED);
         }
@@ -49,14 +51,15 @@ public class RevokedConsentTask extends ConsentTask {
                 .flatMap(consentArtefacts -> {
                     System.out.println("consentArtefacts " + consentArtefacts);
                     var cmSuffix = getCmSuffixFromArtefact(consentArtefacts);
-                    return gatewayServiceClient.sendConsentOnNotify(cmSuffix, buildConsentOnNotifyRequest(consentArtefacts,consentNotification.getConsentRequestId()));
+                    return gatewayServiceClient.sendConsentOnNotify(cmSuffix, buildConsentOnNotifyRequest(consentArtefacts,requestID));
                 })
                 .then(Mono.defer(() -> Flux.fromIterable(consentNotification.getConsentArtefacts())
                         .flatMap(reference -> processArtefactReference(reference, timeStamp))
                         .then()));
     }
 
-    private ConsentOnNotifyRequest buildConsentOnNotifyRequest(List<ConsentArtefact> consentArtefacts,String responseRequestId) {
+    private ConsentOnNotifyRequest buildConsentOnNotifyRequest(List<ConsentArtefact> consentArtefacts,UUID responseRequestId) {
+        logger.info("inside buildConsentOnNotifyRequest");
         var requestId = UUID.randomUUID();
         var consentArtefactRequest = ConsentOnNotifyRequest
                 .builder()
@@ -67,8 +70,9 @@ public class RevokedConsentTask extends ConsentTask {
         for (ConsentArtefact consentArtefact : consentArtefacts) {
             acknowledgements.add(ConsentAcknowledgement.builder().consentId(consentArtefact.getConsentId()).status(OK).build());
         }
-        GatewayResponse gatewayResponse = new GatewayResponse(responseRequestId);
+        GatewayResponse gatewayResponse = new GatewayResponse(responseRequestId.toString());
         consentArtefactRequest.resp(gatewayResponse).build();
+        logger.info("logging resp.requestid "+responseRequestId);
         return consentArtefactRequest.acknowledgement(acknowledgements).build();
     }
 
