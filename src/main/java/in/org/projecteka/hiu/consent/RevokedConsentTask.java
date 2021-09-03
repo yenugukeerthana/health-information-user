@@ -8,7 +8,6 @@ import in.org.projecteka.hiu.consent.model.ConsentNotification;
 import in.org.projecteka.hiu.consent.model.ConsentStatus;
 import in.org.projecteka.hiu.consent.model.consentmanager.ConsentAcknowledgement;
 import in.org.projecteka.hiu.consent.model.consentmanager.ConsentOnNotifyRequest;
-import org.slf4j.Logger;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -28,7 +27,6 @@ public class RevokedConsentTask extends ConsentTask {
     private static final String CONSENT_REVOKE_MESSAGE = "Consent is revoked";
     private final HealthInformationPublisher healthInformationPublisher;
     private final GatewayServiceClient gatewayServiceClient;
-    private Logger logger;
 
     public RevokedConsentTask(ConsentRepository consentRepository, HealthInformationPublisher healthInformationPublisher, GatewayServiceClient gatewayServiceClient) {
         super(consentRepository);
@@ -59,7 +57,6 @@ public class RevokedConsentTask extends ConsentTask {
     }
 
     private ConsentOnNotifyRequest buildConsentOnNotifyRequest(List<ConsentArtefact> consentArtefacts,UUID responseRequestId) {
-        logger.info("inside buildConsentOnNotifyRequest");
         var requestId = UUID.randomUUID();
         var consentArtefactRequest = ConsentOnNotifyRequest
                 .builder()
@@ -72,7 +69,6 @@ public class RevokedConsentTask extends ConsentTask {
         }
         GatewayResponse gatewayResponse = new GatewayResponse(responseRequestId.toString());
         consentArtefactRequest.resp(gatewayResponse).build();
-        logger.info("logging resp.requestid "+responseRequestId);
         return consentArtefactRequest.acknowledgement(acknowledgements).build();
     }
 
