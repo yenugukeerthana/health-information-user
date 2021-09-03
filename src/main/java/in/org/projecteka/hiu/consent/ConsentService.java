@@ -210,7 +210,7 @@ public class ConsentService {
     }
 
     public Mono<Void> handleNotification(HiuConsentNotificationRequest hiuNotification) {
-        return processConsentNotification(hiuNotification.getNotification(), hiuNotification.getTimestamp());
+        return processConsentNotification(hiuNotification.getNotification(), hiuNotification.getTimestamp(), hiuNotification.getRequestId());
     }
 
     public Mono<Void> handleConsentArtefact(GatewayConsentArtefactResponse consentArtefactResponse) {
@@ -262,12 +262,12 @@ public class ConsentService {
         return empty();
     }
 
-    private Mono<Void> processConsentNotification(ConsentNotification notification, LocalDateTime localDateTime) {
+    private Mono<Void> processConsentNotification(ConsentNotification notification, LocalDateTime localDateTime, UUID requestId) {
         var consentTask = consentTasks.get(notification.getStatus());
         if (consentTask == null) {
             return error(ClientError.validationFailed());
         }
-        return consentTask.perform(notification, localDateTime);
+        return consentTask.perform(notification, localDateTime, requestId);
     }
 
     @PostConstruct

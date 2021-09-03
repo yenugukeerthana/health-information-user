@@ -41,7 +41,7 @@ public class RevokedConsentTask extends ConsentTask {
     }
 
     @Override
-    public Mono<Void> perform(ConsentNotification consentNotification, LocalDateTime timeStamp) {
+    public Mono<Void> perform(ConsentNotification consentNotification, LocalDateTime timeStamp, UUID requestID) {
         if (consentNotification.getConsentArtefacts().isEmpty()) {
             return processNotificationRequest(consentNotification.getConsentRequestId(), EXPIRED);
         }
@@ -49,14 +49,14 @@ public class RevokedConsentTask extends ConsentTask {
                 .flatMap(consentArtefacts -> {
                     System.out.println("consentArtefacts " + consentArtefacts);
                     var cmSuffix = getCmSuffixFromArtefact(consentArtefacts);
-                    return gatewayServiceClient.sendConsentOnNotify(cmSuffix, buildConsentOnNotifyRequest(consentArtefacts,consentNotification.getConsentRequestId()));
+                    return gatewayServiceClient.sendConsentOnNotify(cmSuffix, buildConsentOnNotifyRequest(consentArtefacts,requestID));
                 })
                 .then(Mono.defer(() -> Flux.fromIterable(consentNotification.getConsentArtefacts())
                         .flatMap(reference -> processArtefactReference(reference, timeStamp))
                         .then()));
     }
 
-    private ConsentOnNotifyRequest buildConsentOnNotifyRequest(List<ConsentArtefact> consentArtefacts,String responseRequestId) {
+    private ConsentOnNotifyRequest buildConsentOnNotifyRequest(List<ConsentArtefact> consentArtefacts,UUID responseRequestId) {
         var requestId = UUID.randomUUID();
         var consentArtefactRequest = ConsentOnNotifyRequest
                 .builder()
@@ -67,7 +67,7 @@ public class RevokedConsentTask extends ConsentTask {
         for (ConsentArtefact consentArtefact : consentArtefacts) {
             acknowledgements.add(ConsentAcknowledgement.builder().consentId(consentArtefact.getConsentId()).status(OK).build());
         }
-        GatewayResponse gatewayResponse = new GatewayResponse(responseRequestId);
+        GatewayResponse gatewayResponse = new GatewayResponse(responseRequestId.toString());
         consentArtefactRequest.resp(gatewayResponse).build();
         return consentArtefactRequest.acknowledgement(acknowledgements).build();
     }
