@@ -65,12 +65,20 @@
               "display": "Prescription"
             },
             {
-              "code": "OPConsultation",
-              "display": "OPD Consultation"
-            },
-            {
               "code": "ImmunizationRecord",
               "display": "Immunization Record"
+            },
+            {
+              "code": "OPConsultation",
+              "display": "OP Consultation"
+            },
+            {
+              "code": "HealthDocumentRecord",
+              "display": "Health Document Record"
+            },
+            {
+              "code": "WellnessRecord",
+              "display": "Wellness Record"
             }
           ]
         }
