@@ -247,7 +247,6 @@ public class PatientConsentRepository {
                                 handler.result().forEach(row -> ids.add(row.getString("transaction_id")));
                                 monoSink.success(ids);
 
-
                             }
                         }));
     }
@@ -266,6 +265,7 @@ public class PatientConsentRepository {
                                 return;
                             } else {
                                 monoSink.success();
+
                             }
                         }));
     }
