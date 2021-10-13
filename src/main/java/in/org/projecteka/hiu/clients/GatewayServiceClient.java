@@ -15,7 +15,9 @@ import reactor.core.publisher.Mono;
 
 import static in.org.projecteka.hiu.clients.PatientSearchThrowable.notFound;
 import static in.org.projecteka.hiu.clients.PatientSearchThrowable.unknown;
-import static in.org.projecteka.hiu.common.Constants.*;
+import static in.org.projecteka.hiu.common.Constants.CORRELATION_ID;
+import static in.org.projecteka.hiu.common.Constants.PATH_PATIENT_STATUS_ON_NOTIFY;
+import static in.org.projecteka.hiu.common.Constants.X_CM_ID;
 import static in.org.projecteka.hiu.consent.ConsentException.creationFailed;
 import static java.time.Duration.ofMillis;
 import static java.util.function.Predicate.not;
