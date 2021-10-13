@@ -13,8 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-import java.util.Properties;
-
 import static in.org.projecteka.hiu.clients.PatientSearchThrowable.notFound;
 import static in.org.projecteka.hiu.clients.PatientSearchThrowable.unknown;
 import static in.org.projecteka.hiu.common.Constants.*;
