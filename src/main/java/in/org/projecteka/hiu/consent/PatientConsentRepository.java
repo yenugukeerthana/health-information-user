@@ -13,11 +13,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static in.org.projecteka.hiu.ClientError.dbOperationFailure;
@@ -41,9 +37,12 @@ public class PatientConsentRepository {
 
     private static final String DELETE_FROM_CONSENT_REQUEST = "DELETE FROM consent_request " +
             "WHERE consent_request_id IN (%s) RETURNING consent_request_id";
+    private static final String DELETE_FROM_CONSENT_REQUEST_BY_PATIENT_ID = "delete from consent_request where consent_request->'patient'->>'id' = $1 returning consent_request->'patient'->>'id' as healthId";
 
     private static final String DELETE_FROM_CONSENT_ARTEFACT = "DELETE FROM consent_artefact " +
             "WHERE consent_request_id IN (%s) RETURNING consent_artefact_id";
+
+    private static final String DELETE_FROM_CONSENT_ARTEFACT_BY_PATIENT_ID = "DELETE FROM consent_artefact where consent_artefact->'patient'->>'id' IN (%s) RETURNING consent_artefact_id";
 
     private static final String DELETE_FROM_DATA_FLOW_REQUEST = "DELETE FROM data_flow_request " +
             "WHERE consent_artefact_id IN (%s) RETURNING transaction_id";
@@ -58,14 +57,14 @@ public class PatientConsentRepository {
             "WHERE transaction_id IN (%s)";
 
     private static final String SELECT_LATEST_RESOURCE_BY_CC_FOR_PATIENT_IN_HIP =
-                "SELECT hi.care_context_reference as care_context_reference, " +
+            "SELECT hi.care_context_reference as care_context_reference, " +
                     "dfr.consent_artefact_id as consent_artefact_id, MAX(dfp.latest_res_date) as max_res_date " +
-                "FROM patient_consent_request pcr " +
+                    "FROM patient_consent_request pcr " +
                     "JOIN consent_artefact ca ON ca.consent_request_id=pcr.consent_request_id::text " +
                     "JOIN data_flow_request dfr ON dfr.consent_artefact_id=ca.consent_artefact_id " +
                     "JOIN data_flow_parts dfp on dfp.transaction_id=dfr.transaction_id " +
                     "JOIN health_information hi ON hi.transaction_id=dfp.transaction_id " +
-                "WHERE pcr.patient_id=$1 AND pcr.hip_id=$2 AND dfp.status in ('SUCCEEDED', 'PARTIAL') " +
+                    "WHERE pcr.patient_id=$1 AND pcr.hip_id=$2 AND dfp.status in ('SUCCEEDED', 'PARTIAL') " +
                     "GROUP BY care_context_reference, dfr.consent_artefact_id";
 
 
@@ -189,6 +188,42 @@ public class PatientConsentRepository {
                         }));
     }
 
+    public Mono<Set<String>> deleteConsentRequest(String healthId) {
+        return Mono.create(monoSink ->
+                readWriteClient.preparedQuery(DELETE_FROM_CONSENT_REQUEST_BY_PATIENT_ID)
+                        .execute(Tuple.of(healthId),
+                                handler -> {
+                                    if (handler.failed()) {
+                                        logger.error(handler.cause().getMessage(), handler.cause());
+                                        monoSink.error(new Exception("Failed to delete from data flow request"));
+                                        return;
+                                    } else {
+                                        Set<String> ids = new HashSet<>();
+                                        handler.result().forEach(row -> ids.add(row.getString(0)));
+                                        monoSink.success(ids);
+                                    }
+                                }));
+    }
+
+    public Mono<List<String>> deleteConsentArtefact(Set<String> healthId) {
+        if (healthId.isEmpty()) {
+            return Mono.empty();
+        }
+        var generatedQuery = String.format(DELETE_FROM_CONSENT_ARTEFACT_BY_PATIENT_ID, joinByComma(healthId));
+        return Mono.create(monoSink ->
+                readWriteClient.preparedQuery(generatedQuery)
+                        .execute(handler -> {
+                            if (handler.failed()) {
+                                logger.error(handler.cause().getMessage(), handler.cause());
+                                monoSink.error(new Exception("Failed to delete patient consent artefact"));
+                            } else {
+                                List<String> ids = new ArrayList<>();
+                                handler.result().forEach(row -> ids.add(row.getString("consent_artefact_id")));
+                                monoSink.success(ids);
+                            }
+                        }));
+    }
+
     public Mono<List<String>> deleteHealthInformationFor(List<String> transactionIds) {
         if (transactionIds.isEmpty()) {
             return Mono.empty();
@@ -224,7 +259,6 @@ public class PatientConsentRepository {
                                 return;
                             } else {
                                 monoSink.success();
-
                             }
                         }));
     }
@@ -275,6 +309,10 @@ public class PatientConsentRepository {
 
     private String joinByComma(List<String> list) {
         return String.join(", ", list.stream().map(e -> String.format("'%s'", e)).collect(Collectors.toList()));
+    }
+
+    private String joinByComma(Set<String> list) {
+        return list.stream().map(e -> String.format("'%s'", e)).collect(Collectors.joining(", "));
     }
 
     public Mono<List<Map<String, Object>>> getLatestResourceDateByHipCareContext(String patientId, String hipId) {

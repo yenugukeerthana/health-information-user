@@ -7,6 +7,7 @@ import in.org.projecteka.hiu.clients.GatewayServiceClient;
 import in.org.projecteka.hiu.clients.Patient;
 import in.org.projecteka.hiu.common.Gateway;
 import in.org.projecteka.hiu.common.cache.CacheAdapter;
+import in.org.projecteka.hiu.consent.PatientConsentService;
 import in.org.projecteka.hiu.patient.model.PatientSearchGatewayResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,6 +52,9 @@ class PatientServiceTest {
     @Mock
     GatewayServiceClient gatewayServiceClient;
 
+    @Mock
+    PatientConsentService patientConsentService;
+
     @BeforeEach
     void init() {
         initMocks(this);
@@ -67,7 +71,7 @@ class PatientServiceTest {
                 cache,
                 hiuProperties,
                 gatewayProperties,
-                patientSearchCache);
+                patientSearchCache,patientConsentService);
 
         Mono<Patient> patientPublisher = patientService.findPatientWith(patientId);
 
@@ -90,7 +94,7 @@ class PatientServiceTest {
                 cache,
                 hiuProperties,
                 gatewayProperties,
-                patientSearchCache);
+                patientSearchCache,patientConsentService);
 
         StepVerifier.create(patientService.findPatientWith(patientId))
                 .expectErrorMatches(error -> ((ClientError) error)
@@ -114,7 +118,7 @@ class PatientServiceTest {
                 cache,
                 hiuProperties,
                 gatewayProperties,
-                patientSearchCache);
+                patientSearchCache,patientConsentService);
 
         Mono<Void> publisher = patientService.onFindPatient(searchResponse);
 

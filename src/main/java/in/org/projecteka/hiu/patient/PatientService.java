@@ -6,11 +6,17 @@ import in.org.projecteka.hiu.HiuProperties;
 import in.org.projecteka.hiu.clients.GatewayServiceClient;
 import in.org.projecteka.hiu.clients.Patient;
 import in.org.projecteka.hiu.common.DelayTimeoutException;
+import in.org.projecteka.hiu.common.GatewayResponse;
 import in.org.projecteka.hiu.common.cache.CacheAdapter;
+import in.org.projecteka.hiu.consent.PatientConsentService;
 import in.org.projecteka.hiu.patient.model.FindPatientQuery;
 import in.org.projecteka.hiu.patient.model.FindPatientRequest;
+import in.org.projecteka.hiu.patient.model.HiuPatientStatusNotification;
 import in.org.projecteka.hiu.patient.model.PatientSearchGatewayResponse;
+import in.org.projecteka.hiu.patient.model.PatientStatusAcknowledgment;
+import in.org.projecteka.hiu.patient.model.PatientStatusNotification;
 import in.org.projecteka.hiu.patient.model.Requester;
+import in.org.projecteka.hiu.patient.model.Status;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import reactor.core.publisher.Mono;
@@ -27,13 +33,10 @@ import static in.org.projecteka.hiu.ErrorCode.PATIENT_NOT_FOUND;
 import static in.org.projecteka.hiu.common.Constants.getCmSuffix;
 import static in.org.projecteka.hiu.common.CustomScheduler.scheduleThis;
 import static in.org.projecteka.hiu.common.ErrorMappings.get;
+import static in.org.projecteka.hiu.consent.model.consentmanager.ConsentAcknowledgementStatus.OK;
 import static java.time.Duration.ofMillis;
 import static org.slf4j.LoggerFactory.getLogger;
-import static reactor.core.publisher.Mono.defer;
-import static reactor.core.publisher.Mono.empty;
-import static reactor.core.publisher.Mono.error;
-import static reactor.core.publisher.Mono.just;
-import static reactor.core.publisher.Mono.justOrEmpty;
+import static reactor.core.publisher.Mono.*;
 
 @AllArgsConstructor
 public class PatientService {
@@ -43,6 +46,7 @@ public class PatientService {
     private final HiuProperties hiuProperties;
     private final GatewayProperties gatewayProperties;
     private final CacheAdapter<String, PatientSearchGatewayResponse> gatewayResponseCache;
+    private final PatientConsentService patientConsentService;
 
     private static Mono<Patient> apply(PatientSearchGatewayResponse response) {
         if (response.getPatient() != null) {
@@ -111,5 +115,31 @@ public class PatientService {
         return justOrEmpty(response.getPatient())
                 .flatMap(patient -> cache.put(patient.getId(), patient.toPatient()))
                 .then(defer(() -> gatewayResponseCache.put(response.getResp().getRequestId(), response)));
+    }
+
+    public Mono<Void> perform(HiuPatientStatusNotification hiuPatientStatusNotification) {
+        final String healthId = hiuPatientStatusNotification.notification.patient.id;
+        final String status = hiuPatientStatusNotification.notification.status.toString();
+        if (status.equals(Status.DELETED.toString())) {
+            return patientConsentService.deleteHealthId(healthId)
+                    .flatMap(x-> {
+                        var cmSuffix = healthId.split("@")[1];
+                        var requestID = hiuPatientStatusNotification.requestId;
+                        return gatewayServiceClient.sendPatientStatusOnNotify(cmSuffix, buildPatientStatusOnNotify(requestID));
+                    });
+        }
+        return null;
+    }
+
+
+    private PatientStatusNotification buildPatientStatusOnNotify(UUID requestID) {
+        var requestId = UUID.randomUUID();
+        var patientOnNotifyRequest = PatientStatusNotification
+                .builder()
+                .timestamp(LocalDateTime.now(ZoneOffset.UTC))
+                .requestId(requestId);
+        GatewayResponse gatewayResponse = new GatewayResponse(requestID.toString());
+        patientOnNotifyRequest.resp(gatewayResponse).build();
+        return patientOnNotifyRequest.acknowledgement(PatientStatusAcknowledgment.builder().status(OK).build()).build();
     }
 }
