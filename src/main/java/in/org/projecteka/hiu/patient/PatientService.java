@@ -40,6 +40,7 @@ import static reactor.core.publisher.Mono.defer;
 import static reactor.core.publisher.Mono.empty;
 import static reactor.core.publisher.Mono.error;
 import static reactor.core.publisher.Mono.just;
+import static reactor.core.publisher.Mono.justOrEmpty;
 
 @AllArgsConstructor
 public class PatientService {
