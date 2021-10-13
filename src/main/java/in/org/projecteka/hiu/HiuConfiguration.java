@@ -7,16 +7,22 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import in.org.projecteka.hiu.DestinationsConfig.DestinationInfo;
+import in.org.projecteka.hiu.auth.ExternalIDPOfflineAuthenticator;
+import in.org.projecteka.hiu.auth.IDPProperties;
+import in.org.projecteka.hiu.auth.ExternalIdentityProvider;
+import in.org.projecteka.hiu.auth.IdentityProvider;
 import in.org.projecteka.hiu.clients.GatewayAuthenticationClient;
 import in.org.projecteka.hiu.clients.GatewayServiceClient;
 import in.org.projecteka.hiu.clients.HealthInformationClient;
 import in.org.projecteka.hiu.clients.Patient;
 import in.org.projecteka.hiu.common.Authenticator;
+import in.org.projecteka.hiu.common.CMPatientAuthenticator;
 import in.org.projecteka.hiu.common.CacheMethodProperty;
 import in.org.projecteka.hiu.common.Gateway;
 import in.org.projecteka.hiu.common.GatewayTokenVerifier;
@@ -121,9 +127,15 @@ import reactor.netty.resources.ConnectionProvider;
 import javax.net.ssl.SSLException;
 import java.io.IOException;
 import java.net.URL;
+import java.security.KeyFactory;
 import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.text.ParseException;
 import java.time.Duration;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
@@ -304,7 +316,7 @@ public class HiuConfiguration {
     @SneakyThrows
     @Bean
     public KeyPair keyPair(KeyPairConfig keyPairConfig) {
-        if (keyPairConfig.getKeyStoreFilePath().equals("")) {
+        if(keyPairConfig.getKeyStoreFilePath().equals("")) {
             return new KeyPair(null, null); //Generating an empty key-pair in case of HIU
         }
         return keyPairConfig.createSignConsentRequestKeyPair();
