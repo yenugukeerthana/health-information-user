@@ -126,11 +126,7 @@ public class PatientService {
         final String status = hiuPatientStatusNotification.notification.status.toString();
         if (status.equals(Status.DELETED.toString())) {
             return patientConsentService.deleteHealthId(healthId)
-                    .flatMap(x-> {
-                        var cmSuffix = healthId.split("@")[1];
-                        var requestID = hiuPatientStatusNotification.requestId;
-                        return gatewayServiceClient.sendPatientStatusOnNotify(cmSuffix, buildPatientStatusOnNotify(requestID));
-                    });
+                .then(gatewayServiceClient.sendPatientStatusOnNotify(healthId.split("@")[1], buildPatientStatusOnNotify(hiuPatientStatusNotification.requestId)));
         }
         return null;
     }
