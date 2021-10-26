@@ -54,6 +54,7 @@ To run the tests / build <br />
 ```
 
 ## Local setup
+This setup is only useful to run the api locally (and may be UI). If you need to setup entire ProjectEka services locally then follow this [developers guide](https://projecteka.github.io/content/developers.html)
 ### 1) Provision dependencies locally
 Start with docker compose `docker-compose-infra-lite.yml` which will setup requried dependencies to run the API locally such as
 Postgres, RabitMQ, and orthanc-plugins
