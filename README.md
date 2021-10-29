@@ -45,54 +45,101 @@ docker run -d -p 8002:8080 hiu
 
 ## :rocket: Running From Source
 
-### Database
-clone the db initializer repo. Please see instructions in [hiu-db-initializer](https://github.com/ProjectEKA/hiu-db-initializer)
- 
-### To run
+## Test / Build
 
+To run the tests / build <br />
 ```
-./gradlew bootRun
-```
-
-or if you want to run in local environment setup
-```
-CLIENT_SECRET=${CLIENT_SECRET} HFR_AFFINITY_DOMAINS=projecteka.in ./gradlew bootRun --args='--spring.profiles.active=local'
-```
-or 
-```
-CLIENT_SECRET=${CLIENT_SECRET} HFR_AFFINITY_DOMAINS=projecteka.in ./gradlew bootRunLocal
-```
-Note, in the above case, remember to set the **gatewayservice.clientId** appropriately in application*.yml  
-
-## Running The Tests
-
-To run the tests
-```
+./gradlew clean build
 ./gradlew clean test
 ```
 
-## Dev setup
+## Local setup
+This setup is only useful to run the api locally (and may be UI). If you need to setup entire ProjectEka services locally then follow this [developers guide](https://projecteka.github.io/content/developers.html)
+### 1) Provision dependencies locally
+Start with docker compose `docker-compose-infra-lite.yml` which will setup requried dependencies to run the API locally such as
+Postgres, RabitMQ, and orthanc-plugins
 
-Before you run the docker-compose command below, check your running containers, and modify the docker-compose-infra-lite.yml accordingly.  
-The docker compose assumes that that you want to run a standalone HIU service.   
+Start all containers 
 ```
-docker-compose -f docker-compose-infra-lite.yml up -d
-CLIENTREGISTRY_CLIENTSECRET=${CLIENTREGISTRY_CLIENTSECRET} ./gradlew bootRun --args='--spring.profiles.active=local'
+docker compose -f docker-compose-infra-lite.yml up -d
+```
+Stop all containers
+```
+docker compose -f docker-compose-infra-lite.yml down --volumes
 ```
 
-#### setup users
-Create an admin user for HIU first. You need to create an admin account for HIU first. 
+Postgres container would be created with following connection string `postgres://postgres:password@localhost:5432/health_information_user` 
+
+### 2) Database
+Once you have the local Postgres running, we need to now create the schema.
+Clone the db initializer repo [hiu-db-initializer](https://github.com/ProjectEKA/hiu-db-initializer)
+
+please refer the readme of the repo [hiu-db-initializer](https://github.com/ProjectEKA/hiu-db-initializer) for latest and greatest instruction
+```
+❯ mvn clean install
+
+❯ mvn package
+
+❯ java -Djdbc.url=jdbc:postgresql://localhost:5432/health_information_user -Djdbc.username=postgres -Djdbc.password=password -jar target/hiu-db-initializer-1.0-SNAPSHOT.jar
+```
+
+### 3) Setup Admin user
+The next step is to create an Admin user for HIU application. 
 This is done manually by creating an entry in the “user” table. 
 
-To do this, you need to hash the password for admin first. You can go to this [website](https://bcryptgenerator.com/), and encrypt a string (e.g. password) and with the generated hash string, create a user from postgres for database health_information_user
+To do this, you need to hash the password for admin first. You can go to this [website](https://bcrypt-generator.com/) or any other bcrypt generator online.
+
+e.g. password: `nimda` <br />
+encrypted:  `$2a$12$aVIG0KWbdWZsXzTyyOm2Wu4GXlW0RntDoTuK2xWAvWSs53qez9BMW`
+
+Use the above encrypt valu to create a user in postgres database health_information_user
+
+You can use CLI to log into the DB or any other client like TablePlus or pgAdmin
 
 ```
-docker exec -it $(docker ps -aqf "name=^postgres$") /bin/bash
-psql -U postgres
-\c health_information_user
-insert into "user" (username, password, role, verified) values ('admin', '$2a$04$WW.a3wKaiL2/7xWJc4jUmu4/55aJnwBJscZ.o18X.zLZcOdpwQGQa', 'ADMIN', true);
+example with the CLI (Assuming your container name is postgres - else do a docker ps to get the container ID or name to use with exec)
+
+❯ docker exec -it postgres /bin/bash
+
+root@6ad86a6bc881:/# psql -U admin health_information_user
+psql (14.0 (Debian 14.0-1.pgdg110+1))
+Type "help" for help.
+
+insert into "user" (username, password, role, verified) values ('admin', '$2a$12$aVIG0KWbdWZsXzTyyOm2Wu4GXlW0RntDoTuK2xWAvWSs53qez9BMW', 'ADMIN', true);
 ``` 
 
+### 4) Run the API locally
+You are now ready to run the API locally
+
+```
+./gradlew bootRun --args='--spring.profiles.active=local'
+```
+
+or if you want to run in local environment setup with client secret and frontend
+```
+CLIENT_SECRET=${CLIENT_SECRET} HFR_AFFINITY_DOMAINS=projecteka.in ./gradlew bootRun --args='--spring.profiles.active=local'
+```
+or
+```
+CLIENT_SECRET=${CLIENT_SECRET} HFR_AFFINITY_DOMAINS=projecteka.in ./gradlew bootRunLocal
+```
+Note, in the above case, remember to set the **gatewayservice.clientId** appropriately in application*.yml
+
+#### Note:
+The API requires a valid jwk from the gateway to bootstrap. 
+You can either configure your non production environment cert / jwk provider URL in `application-local.yml` (as jwkUrl) or you can also use the local `jwk.json` under `/localCerts/gateway`
+
+For using the local jwk - goto your terminal and expose your CWD over http with python
+
+`python -m SimpleHTTPServer 8000`
+or
+`python3 -m http.server 8000`
+
+This should start the service `Serving HTTP on :: port 8000 (http://[::]:8000/) ...`
+you can access the jwk on
+http://localhost:8000/localCerts/gateway/jwk.json (this is already defaulted in application-local.yml). Remember to do this before you start the api
+
+### 5) Verify
 Now with the above admin user, you can create HIU users via API. 
 To do that, you need to first authenticate the admin user and get a token.
 

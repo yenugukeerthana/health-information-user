@@ -18,7 +18,7 @@ hiu:
     dataFlowRequestWaitTime: 1
     dataPartWaitTime: 1
   userservice:
-    jwkUrl: http://localhost:9001/auth/realms/consent-manager/protocol/openid-connect/certs
+    jwkUrl:  http://localhost:8000/localCerts/gateway/jwk.json
   consentservice:
     consentRequestFromYears: 7
     consentExpiryInMonths: 2
@@ -49,7 +49,7 @@ hiu:
     requestTimeout: 5000
     clientId: 10000002
     clientSecret: ${CLIENT_SECRET}
-    jwkUrl: http://localhost:8000/v0.5/certs
+    jwkUrl: http://localhost:8000/localCerts/gateway/jwk.json
 keystore:
   file-path: "phiu-local-keystore.p12"
   password: password
