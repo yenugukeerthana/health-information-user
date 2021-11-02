@@ -1,6 +1,8 @@
 package in.org.projecteka.hiu.patient;
 
 import in.org.projecteka.hiu.common.Constants;
+import in.org.projecteka.hiu.consent.PatientConsentRepository;
+import in.org.projecteka.hiu.patient.model.HiuPatientStatusNotification;
 import in.org.projecteka.hiu.patient.model.PatientSearchGatewayResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,6 +22,7 @@ public class PatientController {
 
     private static final String APP_PATH_PATIENTS_ID = "/v1/patients/{id}";
     private final PatientService patientService;
+    private final PatientConsentRepository patientConsentRepository;
 
     @GetMapping(APP_PATH_PATIENTS_ID)
     public Mono<SearchRepresentation> findUserWith(@PathVariable(name = "id") String consentManagerUserId) {
@@ -32,4 +35,11 @@ public class PatientController {
     public Mono<Void> onFindUser(@RequestBody PatientSearchGatewayResponse patientSearchGatewayResponse) {
         return patientService.onFindPatient(patientSearchGatewayResponse);
     }
+
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PostMapping(Constants.PATH_PATIENT_STATUS_NOTIFY)
+    public Mono<Void> perform(@RequestBody HiuPatientStatusNotification hiuPatientStatusNotification) {
+        return patientService.perform(hiuPatientStatusNotification);
+    }
+
 }

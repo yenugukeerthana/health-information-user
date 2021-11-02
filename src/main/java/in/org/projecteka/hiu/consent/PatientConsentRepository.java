@@ -14,9 +14,11 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -41,9 +43,12 @@ public class PatientConsentRepository {
 
     private static final String DELETE_FROM_CONSENT_REQUEST = "DELETE FROM consent_request " +
             "WHERE consent_request_id IN (%s) RETURNING consent_request_id";
+    private static final String DELETE_FROM_CONSENT_REQUEST_BY_PATIENT_ID = "delete from consent_request where consent_request->'patient'->>'id' = $1 returning consent_request->'patient'->>'id' as healthId";
 
     private static final String DELETE_FROM_CONSENT_ARTEFACT = "DELETE FROM consent_artefact " +
             "WHERE consent_request_id IN (%s) RETURNING consent_artefact_id";
+
+    private static final String DELETE_FROM_CONSENT_ARTEFACT_BY_PATIENT_ID = "DELETE FROM consent_artefact where consent_artefact->'patient'->>'id' IN (%s) RETURNING consent_artefact_id";
 
     private static final String DELETE_FROM_DATA_FLOW_REQUEST = "DELETE FROM data_flow_request " +
             "WHERE consent_artefact_id IN (%s) RETURNING transaction_id";
@@ -189,6 +194,42 @@ public class PatientConsentRepository {
                         }));
     }
 
+    public Mono<Set<String>> deleteConsentRequest(String healthId) {
+        return Mono.create(monoSink ->
+                readWriteClient.preparedQuery(DELETE_FROM_CONSENT_REQUEST_BY_PATIENT_ID)
+                        .execute(Tuple.of(healthId),
+                                handler -> {
+                                    if (handler.failed()) {
+                                        logger.error(handler.cause().getMessage(), handler.cause());
+                                        monoSink.error(new Exception("Failed to delete from data flow request"));
+                                        return;
+                                    } else {
+                                        Set<String> ids = new HashSet<>();
+                                        handler.result().forEach(row -> ids.add(row.getString(0)));
+                                        monoSink.success(ids);
+                                    }
+                                }));
+    }
+
+    public Mono<List<String>> deleteConsentArtefact(Set<String> healthId) {
+        if (healthId.isEmpty()) {
+            return Mono.empty();
+        }
+        var generatedQuery = String.format(DELETE_FROM_CONSENT_ARTEFACT_BY_PATIENT_ID, joinByComma(healthId));
+        return Mono.create(monoSink ->
+                readWriteClient.preparedQuery(generatedQuery)
+                        .execute(handler -> {
+                            if (handler.failed()) {
+                                logger.error(handler.cause().getMessage(), handler.cause());
+                                monoSink.error(new Exception("Failed to delete patient consent artefact"));
+                            } else {
+                                List<String> ids = new ArrayList<>();
+                                handler.result().forEach(row -> ids.add(row.getString("consent_artefact_id")));
+                                monoSink.success(ids);
+                            }
+                        }));
+    }
+
     public Mono<List<String>> deleteHealthInformationFor(List<String> transactionIds) {
         if (transactionIds.isEmpty()) {
             return Mono.empty();
@@ -275,6 +316,10 @@ public class PatientConsentRepository {
 
     private String joinByComma(List<String> list) {
         return String.join(", ", list.stream().map(e -> String.format("'%s'", e)).collect(Collectors.toList()));
+    }
+
+    private String joinByComma(Set<String> list) {
+        return list.stream().map(e -> String.format("'%s'", e)).collect(Collectors.joining(", "));
     }
 
     public Mono<List<Map<String, Object>>> getLatestResourceDateByHipCareContext(String patientId, String hipId) {

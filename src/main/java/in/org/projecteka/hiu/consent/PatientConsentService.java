@@ -136,6 +136,16 @@ public class PatientConsentService {
                         .minusYears(consentServiceProperties.getConsentRequestFromYears())));
     }
 
+    public Mono<Void> deleteHealthId(String healthId) {
+        return patientConsentRepository.deleteConsentRequest(healthId)
+                .flatMap(patientConsentRepository::deleteConsentArtefact)
+                .flatMap(patientConsentRepository::deleteDataFlowRequestFor)
+                .flatMap(patientConsentRepository::deleteHealthInformationFor)
+                .flatMap(patientConsentRepository::deleteDataFlowPartsFor)
+                .flatMap(patientConsentRepository::deleteDataFlowRequestKeysFor);
+
+    }
+
     private Mono<ConsentRequestData> buildConsentRequest(String requesterId, String hipId, LocalDateTime dateFrom) {
         return just(ConsentRequestData.builder().consent(Consent.builder()
                 .hiTypes(getAllApplicableHITypes())

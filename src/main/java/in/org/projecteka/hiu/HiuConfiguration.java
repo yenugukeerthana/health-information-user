@@ -327,13 +327,14 @@ public class HiuConfiguration {
                                          CacheAdapter<String, Patient> cache,
                                          HiuProperties hiuProperties,
                                          GatewayProperties gatewayProperties,
-                                         CacheAdapter<String, PatientSearchGatewayResponse> patientSearchCache) {
+                                         CacheAdapter<String, PatientSearchGatewayResponse> patientSearchCache,
+                                         PatientConsentService patientConsentService) {
         return new PatientService(
                 gatewayServiceClient,
                 cache,
                 hiuProperties,
                 gatewayProperties,
-                patientSearchCache);
+                patientSearchCache, patientConsentService);
     }
 
     @Bean

@@ -6,17 +6,17 @@ import in.org.projecteka.hiu.consent.model.ConsentArtefactRequest;
 import in.org.projecteka.hiu.consent.model.consentmanager.ConsentOnNotifyRequest;
 import in.org.projecteka.hiu.consent.model.consentmanager.ConsentRequest;
 import in.org.projecteka.hiu.patient.model.FindPatientRequest;
+import in.org.projecteka.hiu.patient.model.PatientStatusNotification;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-import java.util.Properties;
-
 import static in.org.projecteka.hiu.clients.PatientSearchThrowable.notFound;
 import static in.org.projecteka.hiu.clients.PatientSearchThrowable.unknown;
 import static in.org.projecteka.hiu.common.Constants.CORRELATION_ID;
+import static in.org.projecteka.hiu.common.Constants.PATH_PATIENT_STATUS_ON_NOTIFY;
 import static in.org.projecteka.hiu.common.Constants.X_CM_ID;
 import static in.org.projecteka.hiu.consent.ConsentException.creationFailed;
 import static java.time.Duration.ofMillis;
@@ -107,6 +107,25 @@ public class GatewayServiceClient {
                         .header(X_CM_ID, cmSuffix)
                         .header(CORRELATION_ID, MDC.get(CORRELATION_ID))
                         .body(just(request), ConsentOnNotifyRequest.class)
+                        .retrieve()
+                        .onStatus(not(HttpStatus::is2xxSuccessful),
+                                clientResponse -> clientResponse.bodyToMono(String.class)
+                                        .doOnNext(logger::error)
+                                        .then(error(creationFailed())))
+                        .toBodilessEntity()
+                        .timeout(ofMillis(gatewayProperties.getRequestTimeout())))
+                .then();
+    }
+
+    public Mono<Void> sendPatientStatusOnNotify(String cmSuffix, PatientStatusNotification request) {
+        return gateway.token()
+                .flatMap(token -> webClient
+                        .post()
+                        .uri(PATH_PATIENT_STATUS_ON_NOTIFY)
+                        .header(AUTHORIZATION, token)
+                        .header(X_CM_ID, cmSuffix)
+                        .header(CORRELATION_ID, MDC.get(CORRELATION_ID))
+                        .body(just(request), PatientStatusNotification.class)
                         .retrieve()
                         .onStatus(not(HttpStatus::is2xxSuccessful),
                                 clientResponse -> clientResponse.bodyToMono(String.class)
