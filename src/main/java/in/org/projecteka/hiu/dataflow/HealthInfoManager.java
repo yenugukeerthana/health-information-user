@@ -36,7 +36,6 @@ import static in.org.projecteka.hiu.dataflow.model.DataRequestStatus.PROCESSING;
 import static in.org.projecteka.hiu.dataflow.model.HealthInfoStatus.PARTIAL;
 import static in.org.projecteka.hiu.dataflow.model.HealthInfoStatus.RECEIVED;
 import static java.time.LocalDateTime.now;
-import static java.time.ZoneOffset.UTC;
 import static java.util.UUID.fromString;
 import static org.springframework.util.StringUtils.hasText;
 import static org.springframework.util.StringUtils.isEmpty;
@@ -167,7 +166,7 @@ public class HealthInfoManager {
                         if (dataRequestDetails.stream().anyMatch(this::isStatusNull)) {
                             logger.info("Some data parts are not yet received for data request id {}",
                                     dataRequestDetail.getDataRequestId());
-                            var status = now(UTC)
+                            var status = now()
                                     .isAfter(dataRequestDetail.getDataFlowRequestedAt()
                                     .plusMinutes(serviceProperties.getDataPartWaitTime())) ?
                                     getStatusFor(dataRequestDetails) : PROCESSING;
@@ -200,7 +199,7 @@ public class HealthInfoManager {
     }
 
     private DataRequestStatus getStatusAgainstDate(LocalDateTime dateTime, Integer withinMinutes) {
-        return now(UTC).isAfter(dateTime.plusMinutes(withinMinutes)) ? ERRORED : PROCESSING;
+        return now().isAfter(dateTime.plusMinutes(withinMinutes)) ? ERRORED : PROCESSING;
     }
 
     private DataRequestStatus getStatusFor(List<PatientDataRequestDetail> dataRequestDetails) {
@@ -235,7 +234,7 @@ public class HealthInfoManager {
 
     private boolean isConsentNotExpired(Map<String, String> consentDetail) {
         var consentExpiryDate = LocalDateTime.parse(consentDetail.get("consentExpiryDate"));
-        return consentExpiryDate.isAfter(now(UTC));
+        return consentExpiryDate.isAfter(now());
     }
 
     private boolean isGrantedConsent(Map<String, String> consentDetail) {

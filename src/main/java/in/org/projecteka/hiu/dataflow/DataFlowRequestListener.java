@@ -28,7 +28,6 @@ import org.springframework.amqp.rabbit.listener.MessageListenerContainer;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -113,7 +112,7 @@ public class DataFlowRequestListener {
 
     private GatewayDataFlowRequest getDataFlowRequest(DataFlowRequest dataFlowRequest) {
         var requestId = UUID.randomUUID();
-        var timestamp = LocalDateTime.now(ZoneOffset.UTC);
+        var timestamp = LocalDateTime.now();
         return new GatewayDataFlowRequest(requestId, timestamp, dataFlowRequest);
     }
 

@@ -41,7 +41,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -205,11 +204,11 @@ public class HealthDataProcessor {
                                                                            SessionStatus sessionStatus) {
         return HealthInfoNotificationRequest.builder()
                 .requestId(UUID.randomUUID())
-                .timestamp(LocalDateTime.now(ZoneOffset.UTC))
+                .timestamp(LocalDateTime.now())
                 .notification(Notification.builder()
                         .consentId(context.getConsentId())
                         .transactionId(context.getTransactionId())
-                        .doneAt(LocalDateTime.now(ZoneOffset.UTC))
+                        .doneAt(LocalDateTime.now())
                         .notifier(Notifier.builder()
                                 .type(Type.HIU)
                                 .id(hiuProperties.getId())

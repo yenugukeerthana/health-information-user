@@ -12,7 +12,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -60,7 +59,7 @@ public class RevokedConsentTask extends ConsentTask {
         var requestId = UUID.randomUUID();
         var consentArtefactRequest = ConsentOnNotifyRequest
                 .builder()
-                .timestamp(LocalDateTime.now(ZoneOffset.UTC))
+                .timestamp(LocalDateTime.now())
                 .requestId(requestId);
         var acknowledgements = new ArrayList<ConsentAcknowledgement>();
 
