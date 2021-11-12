@@ -13,6 +13,7 @@ import java.time.Instant;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static in.org.projecteka.hiu.common.Constants.ISTClock;
 import static reactor.core.publisher.Mono.error;
 
 @AllArgsConstructor
@@ -47,7 +48,7 @@ public class CustomScheduler<T> {
     public static Function<Flux<Long>, Publisher<?>> exponentialBackOff(Duration minimum,
                                                                         Duration maximum,
                                                                         Duration timeout) {
-        Instant finish = Instant.now().plus(timeout);
+        Instant finish = Instant.now(ISTClock).plus(timeout);
         return iterations -> getDelay(minimum, maximum, finish, iterations);
     }
 
@@ -55,7 +56,7 @@ public class CustomScheduler<T> {
         return iterations
                 .map(iteration -> calculateDuration(minimum, maximum, iteration))
                 .concatMap(delay -> {
-                    if (Instant.now().isAfter(finish)) {
+                    if (Instant.now(ISTClock).isAfter(finish)) {
                         return error(new DelayTimeoutException());
                     }
                     return Mono.delay(delay).doOnSubscribe(logDelay(delay));

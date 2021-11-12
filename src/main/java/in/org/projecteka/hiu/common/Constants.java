@@ -1,6 +1,12 @@
 package in.org.projecteka.hiu.common;
 
+import java.time.Clock;
+import java.time.Duration;
+import java.time.ZoneOffset;
+
 public class Constants {
+    public static final Clock ISTClock = Clock.offset(Clock.systemUTC(), Duration.ofSeconds(19800));
+    public static final ZoneOffset IST = ZoneOffset.ofHoursMinutes(5,30);
     // APIs
     private static final String CURRENT_VERSION = "/v0.5";
     public static final String PATH_CONSENT_REQUESTS_ON_INIT = CURRENT_VERSION + "/consent-requests/on-init";

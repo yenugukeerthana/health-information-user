@@ -16,11 +16,11 @@ import java.net.SocketAddress;
 import java.util.concurrent.TimeoutException;
 
 import static in.org.projecteka.hiu.Error.of;
+import static in.org.projecteka.hiu.common.Constants.IST;
 import static in.org.projecteka.hiu.common.heartbeat.model.Status.DOWN;
 import static in.org.projecteka.hiu.common.heartbeat.model.Status.UP;
 import static java.lang.String.format;
 import static java.time.LocalDateTime.now;
-import static java.time.ZoneOffset.UTC;
 import static reactor.core.publisher.Mono.just;
 
 
@@ -35,12 +35,12 @@ public class Heartbeat {
     public Mono<HeartbeatResponse> getStatus() {
         try {
             if (cacheHealth.isUp() && isRabbitMQUp() && isPostgresUp()) {
-                return just(HeartbeatResponse.builder().timeStamp(now(UTC)).status(UP).build());
+                return just(HeartbeatResponse.builder().timeStamp(now(IST)).status(UP).build());
             }
-            return just(HeartbeatResponse.builder().timeStamp(now(UTC)).status(DOWN).error(of(SERVICE_DOWN)).build());
+            return just(HeartbeatResponse.builder().timeStamp(now(IST)).status(DOWN).error(of(SERVICE_DOWN)).build());
         } catch (IOException | TimeoutException e) {
             logger.error(format("Heartbeat is not healthy with failure: %s", e.getMessage()), e);
-            return just(HeartbeatResponse.builder().timeStamp(now(UTC)).status(DOWN).error(of(SERVICE_DOWN)).build());
+            return just(HeartbeatResponse.builder().timeStamp(now(IST)).status(DOWN).error(of(SERVICE_DOWN)).build());
         }
     }
 
