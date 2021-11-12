@@ -34,6 +34,7 @@ import java.util.UUID;
 import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
 import static in.org.projecteka.hiu.ClientError.queueNotFound;
 import static in.org.projecteka.hiu.common.Constants.CORRELATION_ID;
+import static in.org.projecteka.hiu.common.Constants.IST;
 import static in.org.projecteka.hiu.common.Serializer.to;
 import static reactor.core.publisher.Mono.defer;
 
@@ -112,7 +113,7 @@ public class DataFlowRequestListener {
 
     private GatewayDataFlowRequest getDataFlowRequest(DataFlowRequest dataFlowRequest) {
         var requestId = UUID.randomUUID();
-        var timestamp = LocalDateTime.now();
+        var timestamp = LocalDateTime.now(IST);
         return new GatewayDataFlowRequest(requestId, timestamp, dataFlowRequest);
     }
 
@@ -146,7 +147,7 @@ public class DataFlowRequestListener {
     }
 
     private LocalDateTime getExpiryDate() {
-        return LocalDateTime.now().plusDays(dataFlowProperties.getOffsetInDays());
+        return LocalDateTime.now(IST).plusDays(dataFlowProperties.getOffsetInDays());
     }
 
     @SneakyThrows

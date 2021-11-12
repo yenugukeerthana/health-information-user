@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static in.org.projecteka.hiu.ClientError.consentArtefactNotFound;
+import static in.org.projecteka.hiu.common.Constants.IST;
 import static in.org.projecteka.hiu.common.Constants.getCmSuffix;
 import static in.org.projecteka.hiu.consent.model.ConsentStatus.EXPIRED;
 import static in.org.projecteka.hiu.consent.model.consentmanager.ConsentAcknowledgementStatus.OK;
@@ -58,7 +59,7 @@ public class ExpiredConsentTask extends ConsentTask {
         var requestId = UUID.randomUUID();
         var consentArtefactRequest = ConsentOnNotifyRequest
                 .builder()
-                .timestamp(LocalDateTime.now())
+                .timestamp(LocalDateTime.now(IST))
                 .requestId(requestId);
         var acknowledgements = new ArrayList<ConsentAcknowledgement>();
 

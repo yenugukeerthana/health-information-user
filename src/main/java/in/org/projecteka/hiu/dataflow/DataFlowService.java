@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static in.org.projecteka.hiu.common.Constants.IST;
 import static reactor.core.publisher.Mono.defer;
 
 @AllArgsConstructor
@@ -127,7 +128,7 @@ public class DataFlowService {
     }
 
     private boolean hasConsentArtefactExpired(LocalDateTime dataEraseAt) {
-        return dataEraseAt != null && dataEraseAt.isBefore(LocalDateTime.now());
+        return dataEraseAt != null && dataEraseAt.isBefore(LocalDateTime.now(IST));
     }
 
     private boolean hasContent(Entry entry) {

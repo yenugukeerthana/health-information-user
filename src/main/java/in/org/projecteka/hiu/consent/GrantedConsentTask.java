@@ -13,6 +13,7 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import static in.org.projecteka.hiu.common.Constants.IST;
 import static in.org.projecteka.hiu.common.Constants.getCmSuffix;
 import static in.org.projecteka.hiu.consent.model.ConsentStatus.GRANTED;
 import static reactor.core.publisher.Flux.fromIterable;
@@ -39,7 +40,7 @@ public class GrantedConsentTask extends ConsentTask {
                     var consentArtefactRequest = ConsentArtefactRequest
                             .builder()
                             .consentId(reference.getId())
-                            .timestamp(LocalDateTime.now())
+                            .timestamp(LocalDateTime.now(IST))
                             .requestId(requestId)
                             .build();
                     return gatewayClient.requestConsentArtefact(consentArtefactRequest, cmSuffix);
