@@ -28,13 +28,13 @@ import org.springframework.amqp.rabbit.listener.MessageListenerContainer;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.UUID;
 
 import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
 import static in.org.projecteka.hiu.ClientError.queueNotFound;
 import static in.org.projecteka.hiu.common.Constants.CORRELATION_ID;
+import static in.org.projecteka.hiu.common.Constants.IST;
 import static in.org.projecteka.hiu.common.Serializer.to;
 import static reactor.core.publisher.Mono.defer;
 
@@ -113,7 +113,7 @@ public class DataFlowRequestListener {
 
     private GatewayDataFlowRequest getDataFlowRequest(DataFlowRequest dataFlowRequest) {
         var requestId = UUID.randomUUID();
-        var timestamp = LocalDateTime.now(ZoneOffset.UTC);
+        var timestamp = LocalDateTime.now(IST);
         return new GatewayDataFlowRequest(requestId, timestamp, dataFlowRequest);
     }
 

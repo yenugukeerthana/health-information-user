@@ -31,6 +31,7 @@ import java.util.UUID;
 import static in.org.projecteka.hiu.ClientError.consentRequestNotFound;
 import static in.org.projecteka.hiu.ErrorCode.INVALID_PURPOSE_OF_USE;
 import static in.org.projecteka.hiu.common.Constants.EMPTY_STRING;
+import static in.org.projecteka.hiu.common.Constants.IST;
 import static in.org.projecteka.hiu.common.Constants.STATUS;
 import static in.org.projecteka.hiu.common.Constants.getCmSuffix;
 import static in.org.projecteka.hiu.consent.model.ConsentRequestRepresentation.toConsentRequestRepresentation;
@@ -40,7 +41,6 @@ import static in.org.projecteka.hiu.consent.model.ConsentStatus.EXPIRED;
 import static in.org.projecteka.hiu.consent.model.ConsentStatus.GRANTED;
 import static in.org.projecteka.hiu.consent.model.ConsentStatus.REVOKED;
 import static java.time.LocalDateTime.now;
-import static java.time.ZoneOffset.UTC;
 import static java.util.UUID.fromString;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static reactor.core.publisher.Flux.fromIterable;
@@ -115,7 +115,7 @@ public class ConsentService {
         var patientId = hiRequest.getConsent().getPatient().getId();
         var consentRequest = ConsentRequest.builder()
                 .requestId(gatewayRequestId)
-                .timestamp(now(UTC))
+                .timestamp(now(IST))
                 .consent(reqInfo)
                 .build();
         var hiuConsentRequest = hiRequest.getConsent().toConsentRequest(gatewayRequestId.toString(), requesterId);
@@ -146,7 +146,7 @@ public class ConsentService {
                         return updatePublisher
                                 .then(patientConsentRepository.updatePatientConsentRequest(dataRequestId,
                                         consentRequestId,
-                                        now(UTC)));
+                                        now(IST)));
                     })
                     .onErrorResume(NoSuchFieldError.class, e -> updatePublisher);
         }
