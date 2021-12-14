@@ -1,3 +1,4 @@
+This is a forked repo from ProjectEKA/health-information-user and contains changes required for opt out feature and other ABDM capabilities.
 ## :hospital: Health Information User
 
 > "Health information User" refers to an entity that wishes to consume the
