@@ -25,11 +25,11 @@ jobs:
         run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD $DOCKER_REGISTRY_URL
       - name: Build docker image
         env:
-          CONTAINER_REPO_NAME: health-information-user
-          DOCKER_USERNAME: ${{ secrets.DOCKER_NHA_USERNAME }}
+          CONTAINER_REPO_NAME: hiu
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: docker build -t $DOCKER_USERNAME/$CONTAINER_REPO_NAME:$RELEASE_VERSION .
       - name: Push Docker Image to Registry
         env:
-          CONTAINER_REPO_NAME: health-information-user
+          CONTAINER_REPO_NAME: hiu
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: docker push $DOCKER_USERNAME/$CONTAINER_REPO_NAME:$RELEASE_VERSION
