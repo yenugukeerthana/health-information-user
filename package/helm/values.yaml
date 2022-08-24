@@ -19,8 +19,6 @@ service:
   port: 9053
 
 config:
-  HIU_ID: "Bahmni"
-  HIU_NAME: "Bahmni"
   IDENTITY_JWK_URL: "https://dev.ndhm.gov.in/auth/realms/consent-manager/protocol/openid-connect/certs"
   DATA_PUSH_URL: ""
   CONSENT_NOTIFICATION_URL: "http://localhost:8003/consent/notification"
