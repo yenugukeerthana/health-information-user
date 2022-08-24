@@ -63,4 +63,11 @@ spec:
                  optional: false
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - mountPath: /tmp/
+              name: consent-data-store
       restartPolicy: Always
+      volumes:
+        - name: consent-data-store
+          persistentVolumeClaim:
+            claimName: {{ .Values.volumes.consentDataStore.claimName }}
